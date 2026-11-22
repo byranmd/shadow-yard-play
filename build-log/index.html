@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shadow Yard Build Log</title>
+<meta name="description" content="How the pixel-art picture of Shadow Yard was built, layer by layer, with before and after sliders.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+:root {
+  --bg: #edf2e3;
+  --panel: #fbfcf7;
+  --fg: #3b2d35;
+  --muted: #6e5f67;
+  --line: #d3dcc4;
+  --lawn: #6aab47;
+  --shade: #56a87c;
+  --plum: #a85d8d;
+  --crate: #e25e00;
+  --chip: #f3e3ea;
+  --good: #3f7d2c;
+  --warn: #b0480b;
+  --font-display: "Pixelify Sans", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1f1a1e; --panel: #2a2328; --fg: #f6eee6; --muted: #bba9b3; --line: #43383f;
+    --lawn: #8cc45f; --shade: #6fbf95; --plum: #d08bbb; --crate: #ff8a3d; --chip: #3a2f36;
+    --good: #9fd77a; --warn: #ffa15c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1f1a1e; --panel: #2a2328; --fg: #f6eee6; --muted: #bba9b3; --line: #43383f;
+  --lawn: #8cc45f; --shade: #6fbf95; --plum: #d08bbb; --crate: #ff8a3d; --chip: #3a2f36;
+  --good: #9fd77a; --warn: #ffa15c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+figure { margin: 0; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.55 var(--font-body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 80px; display: grid; gap: 64px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.01em; }
+h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); }
+h3 { font: 700 1.25rem/1.25 var(--font-body); }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font: 500 0.78rem/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.12rem; color: var(--muted); }
+section { display: grid; gap: 22px; min-width: 0; }
+.sec-head { display: grid; gap: 8px; }
+img.px { image-rendering: pixelated; display: block; width: 100%; height: auto; }
+a { color: var(--plum); }
+:focus-visible { outline: 3px solid var(--crate); outline-offset: 2px; }
+
+.hero { display: grid; gap: 18px; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.fact { display: grid; gap: 2px; }
+.fact b { font: 500 1.5rem/1 var(--font-mono); }
+.fact span { font-size: 0.86rem; color: var(--muted); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+.toc a { text-decoration: none; color: var(--fg); background: var(--chip); padding: 6px 12px; border-radius: 999px; font-size: 0.92rem; }
+.toc a:hover { background: var(--line); }
+.toc a.play { background: var(--crate); color: #fff9e1; font-weight: 700; }
+.toc a.play:hover { background: var(--plum); }
+
+.cmp { position: relative; aspect-ratio: 16 / 9; max-width: 100%; overflow: hidden; border-radius: 6px; background: #000; touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
+.cmp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; image-rendering: pixelated; pointer-events: none; }
+.cmp .before { clip-path: inset(0 calc(100% - var(--p, 50%)) 0 0); }
+.cmp .bar { position: absolute; top: 0; bottom: 0; left: var(--p, 50%); width: 3px; margin-left: -1.5px; background: #fff9e1; box-shadow: 0 0 0 1px #3b2d35; pointer-events: none; }
+.cmp .bar::after { content: "◀ ▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #3b2d35; color: #fff9e1; font: 700 11px/1 var(--font-mono); padding: 7px 8px; border-radius: 999px; white-space: nowrap; }
+.cmp .tag { position: absolute; top: 8px; font: 500 12px/1 var(--font-mono); background: rgba(59,45,53,0.86); color: #fff9e1; padding: 5px 8px; border-radius: 4px; pointer-events: none; }
+.cmp .tag.l { left: 8px; } .cmp .tag.r { right: 8px; }
+.cmp input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.cmp:has(input:focus-visible) { outline: 3px solid var(--crate); outline-offset: 2px; }
+.cmp-ctl { display: flex; gap: 8px; flex-wrap: wrap; }
+.cmp-ctl button { font: 500 0.82rem/1 var(--font-mono); background: var(--chip); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.cmp-ctl button:hover { border-color: var(--plum); }
+
+.strip { overflow-x: auto; padding-bottom: 6px; }
+.strip ol { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 10px; }
+.strip a { display: grid; gap: 6px; text-decoration: none; color: var(--fg); }
+.strip img { border-radius: 4px; border: 2px solid transparent; }
+.strip a:hover img { border-color: var(--plum); }
+.strip .n { font: 500 0.74rem/1 var(--font-mono); color: var(--muted); }
+.strip .t { font-size: 0.9rem; line-height: 1.25; }
+
+.steps { display: grid; gap: 56px; }
+.step { display: grid; gap: 14px; scroll-margin-top: 16px; }
+.step-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.step-id { font: 700 0.85rem/1 var(--font-mono); background: var(--fg); color: var(--bg); padding: 5px 8px; border-radius: 4px; }
+.step-body { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.notes { display: grid; gap: 12px; }
+.note { display: grid; gap: 3px; }
+.note .k { font: 500 0.72rem/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.num { font: 700 1.1rem/1.3 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.num small { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+details.zoom { border-top: 1px dashed var(--line); padding-top: 10px; }
+details.zoom summary { cursor: pointer; font: 500 0.86rem/1.4 var(--font-mono); color: var(--plum); }
+details.zoom .zimgs { display: grid; gap: 10px; margin-top: 10px; }
+details.zoom figcaption { font-size: 0.86rem; color: var(--muted); }
+.era-break { display: grid; gap: 6px; padding: 16px 18px; border-left: 4px solid var(--crate); background: var(--panel); border-radius: 0 6px 6px 0; }
+
+.loop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.loop .box { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; flex: 1 1 140px; }
+.loop .box b { font-family: var(--font-display); font-size: 1.05rem; }
+.loop .box span { font-size: 0.86rem; color: var(--muted); }
+.loop .arr { font: 700 1.1rem/1 var(--font-mono); color: var(--muted); }
+.loop .box.keep { border-color: var(--good); }
+
+.ui { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.uiframe { position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; }
+.uiframe img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.pin { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff9e1; background: #3b2d35; color: #fff9e1; font: 700 12px/1 var(--font-mono); cursor: pointer; display: grid; place-items: center; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+.pin[aria-pressed="true"] { background: var(--crate); }
+.hl { position: absolute; border: 2px solid #fff9e1; outline: 2px solid var(--crate); pointer-events: none; }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.legend button { width: 100%; text-align: left; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; background: none; border: 0; border-radius: 6px; padding: 7px 8px; color: var(--fg); font: inherit; cursor: pointer; }
+.legend button:hover, .legend button[aria-pressed="true"] { background: var(--chip); }
+.legend .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--fg); color: var(--bg); font: 700 11px/22px var(--font-mono); text-align: center; }
+.legend b { display: block; font-size: 0.98rem; }
+.legend span { display: block; font-size: 0.86rem; color: var(--muted); }
+.legend .grp { font: 500 0.72rem/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 10px 8px 2px; }
+.ui-left { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; display: grid; gap: 10px; background: var(--bg); padding-block: 8px; min-width: 0; }
+.uidetail { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+.uidetail img { width: 120px; max-height: 90px; object-fit: contain; image-rendering: pixelated; border-radius: 4px; }
+.uidetail p { font-size: 0.92rem; }
+
+.frames { overflow-x: auto; }
+.frames ol { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 200px; gap: 10px; }
+.frames figure { margin: 0; display: grid; gap: 6px; }
+.frames .crop { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 4px; position: relative; }
+.frames .crop img { position: absolute; max-width: none; image-rendering: pixelated; }
+.frames figcaption { font-size: 0.84rem; color: var(--muted); }
+.frames figcaption b { color: var(--fg); font-family: var(--font-mono); }
+.tl { overflow-x: auto; }
+.tl-grid { min-width: 560px; display: grid; grid-template-columns: 130px 1fr; gap: 6px 10px; align-items: center; }
+.tl-grid .lab { font-size: 0.9rem; }
+.tl-grid .track { position: relative; height: 18px; background: var(--chip); border-radius: 3px; }
+.tl-grid .seg { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--crate); }
+.tl-grid .seg.slow { background: var(--plum); }
+.tl-grid .seg.cream { background: #e8c98a; }
+.tl-grid .seg.wood { background: #9b462c; }
+.tl-grid .seg.dust { background: #b78163; }
+.tl-grid .seg.ring { background: var(--shade); }
+.tl-axis { position: relative; height: 18px; font: 500 0.72rem/1 var(--font-mono); color: var(--muted); }
+.tl-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.tl-axis span:last-child { transform: translateX(-100%); }
+footer { display: grid; gap: 10px; color: var(--muted); font-size: 0.92rem; border-top: 1px solid var(--line); padding-top: 18px; }
+
+@media (max-width: 760px) {
+  .step-body, .ui { grid-template-columns: 1fr; }
+  .pin { width: 21px; height: 21px; font-size: 10px; }
+  .uidetail { grid-template-columns: 84px minmax(0, 1fr); }
+  .uidetail img { width: 84px; max-height: 64px; }
+  body { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero" id="top">
+  <span class="eyebrow">Shadow Yard · Godot 4.7 · 19–20 Nov 2026</span>
+  <h1>How the picture was built, layer by layer</h1>
+  <p class="lede">From a dark grey test yard to a cozy pixel-art meadow. Drag any picture to compare before and after. Every number on this page was measured in the game.</p>
+  <figure class="cmp" data-cmp style="--p: 50%">
+    <img class="after" src="img/p16-j2.png" alt="Now: cozy meadow seen from the south-west, the robot at the start of the dirt path, the orange crate in the gate gap">
+    <img class="before" src="img/z-codex0-first-capture.png" alt="Start: the first sketch, plain low-poly rocks and round trees">
+    <span class="tag l">First sketch</span><span class="tag r">Now · 20 Nov</span>
+    <div class="bar"></div>
+    <input type="range" min="0" max="100" value="50" aria-label="Slide between the first build and now">
+  </figure>
+  <div class="facts" id="facts"></div>
+  <nav class="toc" aria-label="Sections">
+    <a class="play" href="../">Play the game</a>
+    <a href="#strip">Every frame</a>
+    <a href="#method">How each layer was made</a>
+    <a href="#layers">Layer by layer</a>
+    <a href="#s17">The jump</a>
+    <a href="#screen">Reading the screen</a>
+    <a href="#break">The crate break</a>
+  </nav>
+</header>
+
+<section id="strip">
+  <div class="sec-head">
+    <span class="eyebrow">The whole journey</span>
+    <h2>Every frame, in order</h2>
+    <p>The same spot in the yard after every step. Tap a frame to jump to its layer.</p>
+  </div>
+  <div class="strip"><ol id="strip-list"></ol></div>
+</section>
+
+<section id="method">
+  <div class="sec-head">
+    <span class="eyebrow">The method</span>
+    <h2>How each layer was made</h2>
+    <p>The reference picture was not copied. It was taken apart first: what each layer is, how the artist makes it, and why it is there. Then one layer was built at a time.</p>
+  </div>
+  <div class="loop" aria-label="Build loop">
+    <div class="box"><b>Research</b><span>How does the reference artist make this? Their videos, posts, copies by others</span></div>
+    <span class="arr">→</span>
+    <div class="box"><b>Plan</b><span>One layer = one step, with a test for "done"</span></div>
+    <span class="arr">→</span>
+    <div class="box"><b>Backup</b><span>Save the whole project before touching it</span></div>
+    <span class="arr">→</span>
+    <div class="box"><b>Build</b><span>Change one layer only</span></div>
+    <span class="arr">→</span>
+    <div class="box"><b>Check</b><span>A second agent tries to find faults: pictures, numbers, walk test</span></div>
+    <span class="arr">→</span>
+    <div class="box keep"><b>Keep</b><span>or roll back to the backup</span></div>
+  </div>
+  <p>The reference was a ruins frame by another pixel artist. It is not shown here: only its method was studied, and the colours stay this game's own (pink stone, golden lawn, orange crate).</p>
+</section>
+
+<section id="layers">
+  <div class="sec-head">
+    <span class="eyebrow">Layer by layer</span>
+    <h2>What each step added</h2>
+    <p>Left side of each picture = before the step. Right side = after. Open "Zoom in" for a 4× close-up.</p>
+  </div>
+  <div class="steps" id="steps"></div>
+</section>
+
+<section id="screen">
+  <div class="sec-head">
+    <span class="eyebrow">Game screen</span>
+    <h2>Reading the screen</h2>
+    <p>Everything on screen has a job: tell you where to go, what you can touch, or make the place feel real. Tap a number.</p>
+  </div>
+  <div class="ui">
+    <div class="ui-left">
+      <div class="uiframe" id="uiframe">
+        <img src="img/ui-frame.png" alt="Robot standing next to the crate with the E · Break prompt showing">
+      </div>
+      <div class="uidetail" id="uidetail" hidden></div>
+    </div>
+    <ol class="legend" id="legend"></ol>
+  </div>
+</section>
+
+<section id="break">
+  <div class="sec-head">
+    <span class="eyebrow">Game feel</span>
+    <h2>The crate break, frame by frame</h2>
+    <p>Pressing E at the crate starts eight small effects on one clock. Each has a job. Together they make one hit feel strong. The path opens on the very first frame, before any effect plays.</p>
+  </div>
+  <div id="frames"></div>
+  <div class="tl"><div class="tl-grid" id="tl"></div></div>
+</section>
+
+<footer>
+  <span>Shadow Yard is a small practice game made in Godot 4.7. <a href="../">Play it in your browser</a>.</span>
+  <span>Reference: a ruins frame by another pixel artist, studied for its method only.</span>
+</footer>
+
+</div>
+
+<script>
+const STEPS = [
+  { id: 'c0', tag: 'Sketch', name: 'First capture', after: 'img/z-codex0-first-capture.png',
+    era: { title: 'Part 1 · The first build, from sketch', text: 'Codex built the yard in layers too. These five frames are its own screenshots, kept in the project. Shapes first, then light, then life, then colour.' },
+    see: 'Plain low-poly rocks, round trees, flat green ground, seen from a wide, high camera.',
+    why: 'Make it playable first with the simplest shapes: walk, get blocked by the crate, break it, restart.',
+    num: 'Codex’s very first frame' },
+  { id: 'c1', tag: 'Forms', name: 'Stone forms', before: 'img/z-codex0-first-capture.png', after: 'img/z-codex1-stone-forms.png',
+    see: 'Public stone and paving models replace the simple rocks. No plants, no shadows yet. A closer camera.',
+    why: 'Big shapes decide the picture before light or colour. Ruins need blocky stone, so the forms came first.',
+    num: '99.9% of pixels changed <small>(new camera and models)</small>' },
+  { id: 'c2', tag: 'Light', name: 'Sun shadows', before: 'img/z-codex1-stone-forms.png', after: 'img/z-codex2-cast-shadows.png',
+    see: 'The sun’s shadows are switched on. Stones throw dark shapes across the ground.',
+    why: 'Shadows show where the sun is and how tall things are. Without them every stone looks pasted on.',
+    num: '75% of pixels changed' },
+  { id: 'c3', tag: 'Life', name: 'Plants', before: 'img/z-codex2-cast-shadows.png', after: 'img/z-codex3-plants.png',
+    see: 'Trees, bushes, grass and flowers added. Still the raw 3D colours.',
+    why: 'Plants frame the path and bring life between the stones.',
+    num: '31% of pixels changed' },
+  { id: 'c4', tag: 'Colour', name: 'First palette (34 colours)', before: 'img/z-codex3-plants.png', after: 'img/z-codex4-palette.png',
+    see: 'Every pixel mapped to 34 muted colours. This is the dark grey look the next part started from.',
+    why: 'A fixed colour list is what turns a 3D render into pixel art.',
+    num: '34 colours · brightness 125 <small>(of 255)</small>' },
+  { id: 's01', tag: 'Palette 1', name: 'Cozy colours, round 1', before: 'img/p00-original.png', after: 'img/p01-cozy1.png',
+    era: { title: 'Part 2 · Colours and shading (19 Nov, evening)', text: 'The brief: brilliant, cozy colours instead of dark grey, then three shades like a wood-shading tutorial, then the grass of the reference.' },
+    see: 'Same yard, warmer and brighter: heather-pink stone, sage shadows.',
+    why: 'Cozy means warm light and soft bright colours. Dark grey reads cold. Two colour proposals were scored and merged.',
+    num: 'Brightness 126 → 170 <small>(of 255)</small><br>Colours 34 → 27',
+    zooms: [['img/z-cozy1-proposals.png', 'Round 1: before, the two proposals (Honey afternoon, Spring pastel), and the merged palette']] },
+  { id: 's02', tag: 'Palette 2', name: 'More saturation, round 2', before: 'img/p01-cozy1.png', after: 'img/p02-cozy2.png',
+    see: 'Golden lawn, rose stone with plum sides and honey tops, a glowing orange crate.',
+    why: 'The brief asked for cozier and more saturated. Plum stone sides keep the orange crate easy to see against warm stone.',
+    num: 'Colour strength +27% <small>(chroma 0.097 → 0.124)</small><br>Still 27 colours',
+    zooms: [['img/z-cozy2.png', 'Round 2: round 1, "Golden hour", "Candy storybook", merged']] },
+  { id: 's03', tag: 'Shading', name: 'Three tones per surface + grass tufts', before: 'img/p02-cozy2.png', after: 'img/p03-banded-grass.png',
+    see: 'Every surface now uses exactly three flat tones: dark, mid, light. Grass tufts cut every shadow edge into little blade teeth.',
+    why: 'Pixel artists shade with a few flat tones, not smooth gradients (a wood-shading tutorial: three layers). Big flat shapes look calm; teeth at the edges say "grass" without adding noise.',
+    num: 'Stray single pixels in crowns 0.060 → 0.020<br>28,681 tufts in 1 draw call <small>(one job for the graphics card)</small>',
+    zooms: [['img/z-banded.png', 'Three-tone shading: palette round 2 (left) vs banded (right)'], ['img/z-grass.png', 'Grass tufts, sprigs and stone fringes over the banded lawn']] },
+  { id: 's04', tag: 'R1', name: 'Camera grid', before: 'img/p03-banded-grass.png', after: 'img/p04-r1.png',
+    era: { title: 'Part 3 · The reference, taken apart (overnight, 20 Nov)', text: 'Each next step rebuilds one layer of HOW the reference frame is made, not its colours. The camera changes first, so the view itself moves between these two frames.' },
+    see: 'Camera tilted 30° down and turned 45°. Every stone turned to a square angle.',
+    why: 'At this exact angle every straight edge becomes an even stair: 2 pixels across, 1 down. That is the cleanest diagonal a pixel grid can draw. The reference artist uses the same angle.',
+    num: 'Even 2-pixel steps 34% → 53%<br>Floor hidden by trees 21.8% → 6.1%',
+    zooms: [['img/z-r1-walls.png', 'Wall edges: before | after'], ['img/z-r1-paving.png', 'Paving edges: before | after']] },
+  { id: 's05', tag: 'R2', name: 'Declutter', before: 'img/p04-r1.png', after: 'img/p05-r2.png',
+    see: '302 old 3D grass clumps removed. Only the flat tufts stay.',
+    why: 'The reference keeps big quiet areas between busy edges. The clumps had their own colours: bright tips inside shadows, dark roots on lit lawn. That is noise.',
+    num: 'Draw calls 863 → 377 <small>(less work per frame)</small>',
+    zooms: [['img/z-r2-serration.png', 'Shadow edge teeth still read: before | after']] },
+  { id: 's06', tag: 'R3', name: 'Tree crowns lit like a ball', before: 'img/p05-r2.png', after: 'img/p06-r3.png',
+    see: 'Each tree top is one dark mass with light leaf clusters on the sun side. Each tree drops one solid, lumpy shadow.',
+    why: 'A wood-shading tutorial and the reference artist paint a crown the same way: blob first, light bundles on the sun side, mid between. Lighting leaf by leaf gives lace and noise.',
+    num: 'Crown dark / mid / light<br>55/24/21% → 46/41/13%',
+    zooms: [['img/z-r3-crown-oak.png', 'Oak crown: before | after'], ['img/z-r3-crown-shadow.png', 'Crown shadow on the lawn: before | after']] },
+  { id: 's07', tag: 'R4', name: 'Light patches on the lawn', before: 'img/p06-r3.png', after: 'img/p07-r4.png',
+    see: 'The flat lawn splits into big light patches on a mid-green base.',
+    why: 'Real ground is never flat. A hidden tilt map (a noise picture that bends the light direction of the ground) makes some patches face the sun, like gentle slopes, with no real hills.',
+    num: 'Lawn shadow / mid / light<br>28/0/72% → 29/46/25%<br><small>reference 34/43/23%</small>',
+    zooms: [['img/z-r4-lawn.png', 'Lawn: before | after']] },
+  { id: 's08', tag: 'R5', name: 'Dark outline', before: 'img/p07-r4.png', after: 'img/p08-r5.png',
+    see: 'A 1-pixel darker line around stones, slabs, the robot and the crate. None on grass, leaves or trunks.',
+    why: 'A dark line where one thing stands in front of another stops objects looking pasted on. Grass and trees stay soft, as in the reference.',
+    num: '3,005 line pixels<br>0 on grass and leaves',
+    zooms: [['img/z-r5-outline.png', 'Outline on stone and paving: before | after']] },
+  { id: 's09', tag: 'R6', name: 'Cloud shadows', before: 'img/p08-r5.png', after: 'img/p09-r6.png',
+    see: 'Big, slow cloud shadows drift over the lawn, stones and trees.',
+    why: 'Clouds add large shadow shapes where nothing stands, and the slow drift makes the yard feel alive.',
+    num: '6.1% of the ground under cloud<br>Drift ≤ 9 px per second',
+    zooms: [['img/z-r6-clouds.png', 'Cloud shadow edges: before | after | after, 10 s later']] },
+  { id: 's10', tag: 'R8', name: 'Light rims on stone', before: 'img/p09-r6.png', after: 'img/p10-r8.png',
+    see: 'A 1-pixel lighter line on stone edges that bend outward: near-white cream on sunny tops, honey on the pink sides.',
+    why: 'A rim light separates the top of a stone from its side. It is rare, so it becomes the brightest accent on screen.',
+    num: 'Cream rims 0.26% of the frame<br><small>target 0.1–0.3%</small>',
+    zooms: [['img/z-r8-rims.png', 'Rims on stone: before | after']] },
+  { id: 's11', tag: 'R9a', name: 'Grass marks + thicker slabs', before: 'img/p10-r8.png', after: 'img/p11-r9a.png',
+    see: 'Small grass marks are one tone away from the ground under them. Paving slabs are thicker and show a thin side.',
+    why: 'Marks one step from their ground stay quiet. A visible side makes a slab sit on the lawn instead of looking like a sticker.',
+    num: 'Slab edges with no visible side 61% → 26%',
+    zooms: [['img/z-r9a-sprigs.png', 'Grass marks: before | after'], ['img/z-r9a-paving.png', 'Slab sides: before | after']] },
+  { id: 's12', tag: 'R9b', name: 'Worn dirt', before: 'img/p11-r9a.png', after: 'img/p12-r9b.png',
+    see: 'Worn dirt along the old paving path, in the gate gap under the crate, and at both path ends.',
+    why: 'Ground wears where people walk, so dirt tells a story: this is the path. Warm brown also sits nicely next to the cool shadows.',
+    num: 'Dirt = 1.9% of the frame<br>4 worn shapes',
+    zooms: [['img/z-r9b-dirt.png', 'Dirt between slabs: before | after']] },
+  { id: 's13', tag: 'Filter', name: 'The palette filter (last pass)', before: 'img/raw-final.png', after: 'img/p12-r9b.png', labels: ['3D render', 'After filter'],
+    see: 'The last pass snaps every pixel to one colour from a fixed list. Left: the 3D render. Right: what you see in the game.',
+    why: 'A fixed colour list is what makes it read as pixel art. World surfaces already use list colours; the filter mostly fixes the robot, the crate and the rims. Every new colour must be added to the list (Palette.txt).',
+    num: '26 colours above the controls bar' },
+  { id: 's14', tag: 'P1', name: 'Darker lawn shadow + darker crowns', before: 'img/p12-r9b.png', after: 'img/p13-p1.png',
+    era: { title: 'Part 4 · The owner’s picks and the jump (20 Nov)', text: 'The owner answered the open choices with "Take all suggestions". Three of them changed the picture. Then came WASD, a jump with smoke and dust, and E to break the crate. Older frames show the controls bar of their time: the arrow keys moved and Space broke the crate.' },
+    see: 'Cast shadows on the lawn turn darker and cooler (more teal). Each tree crown gets a bigger dark side, away from the sun.',
+    why: 'The old shadow green was almost as light as the mid lawn, so shadows and clouds on mid lawn differed by colour direction only. Painters make shadows darker and cooler. The crowns of the reference are mostly dark.',
+    num: 'Lawn shadow #56a87c → #3f8b6d<br>Lightness step mid → shadow 0.008 → 0.095 <small>(OKLab, a colour scale where equal steps look equal; reference 0.122)</small><br>Crown leaves dark 45% → 56%' },
+  { id: 's15', tag: 'P2', name: 'Bigger view 640×360', before: 'img/p13-p1-in-640.png', after: 'img/p14-p2.png', labels: ['Before · 512×288', 'After · 640×360'],
+    see: 'The picture grows from 512 × 288 to 640 × 360 pixels. Every stone, tuft and robot keeps its pixel size, so the view shows 25% more yard in each direction. The old view is literally the middle of the new one: here it sits on a dark frame at the same scale.',
+    why: 'A Full HD screen (1920 × 1080) is exactly 3 × 640 × 360, so the game can fill it with whole-number scaling and every game pixel stays a sharp square. The reference artist uses 360 lines for the same reason. The controls bar now sits over lawn instead of the south wall.',
+    num: '0.025 m per pixel before and after <small>(camera Size 7.2 ÷ 288 rows = 9.0 ÷ 360)</small><br>Old frame matches the new one at offset (64, 36): 0.29% of pixels differ<br>Controls bar over stone 719 → 0 pixels' },
+  { id: 's16', tag: 'P3', name: 'Camera turned the other way', before: 'img/p14-p2.png', after: 'img/p15-p3.png',
+    see: 'The camera now looks from the south-west instead of the south-east, and the sun turned with it, so the yard is lit like a mirror image. Two oaks moved out of the line of sight, and the view is re-framed so the whole width of the yard fits.',
+    why: 'From the old side, the gate pillar and the crate hid the robot while it broke the crate. At a fixed camera angle the same things always stand in front of each other, so only turning the camera or moving trees helps.',
+    num: 'Robot pixels visible at the crate 123 → 875<br>Yard floor hidden by tree crowns 6.2% → 3.8%' },
+  { id: 's17', tag: 'J1 + J2', name: 'WASD + jump with smoke and dust', after: 'img/p16-j2.png', strip: 'jump',
+    see: 'One hop, frame by frame (scroll sideways). At take-off the robot stretches tall and two puffs of smoke blow out to each side of its feet. It rises 0.25 m, falls faster, squashes flat on landing and throws out a ring of dust. The controls bar now reads WASD Move · Space Jump · E Break · R Restart. The crate now breaks with E: <a href="#break">see the break</a>.',
+    why: 'The brief: walk with WASD, jump with Space, smoke at take-off and particles on landing, and break the crate with E. Stretch and squash sell the launch and the weight; smoke and dust tie the robot to the ground. Every wall and stone is too high to jump onto, so the hop never takes the robot out of the yard.',
+    num: 'Top 0.25 m <small>(about 9 screen pixels)</small><br>In the air 417 ms <small>(up 240, down 177)</small><br>At most 4 smoke + 8 dust + 4 speck particles at once<br>Draw calls 501 → 501 at rest' },
+];
+const PINS = [
+  { group: 'Tells you what to do', name: 'Controls bar', box: [10, 333, 326, 353], at: [94, 343], crop: 'img/ui-hud.png',
+    job: 'The four controls, always on screen.', more: 'WASD to move, Space to jump, E to break, R to restart. Dark plum panel, cream text: the strongest contrast in the frame, so you read it first. It sits at the bottom over lawn only, so it never hides the path.' },
+  { group: 'Tells you what to do', name: '“E · Break” prompt', box: [288, 88, 353, 101], crop: 'img/ui-prompt.png',
+    job: 'Shows only when you are close enough.', more: 'The crate’s reach is 1.35 m. The prompt teaches the action at the exact moment you can use it, then hides when you walk away. Cream letters with a dark edge read on any background.' },
+  { group: 'You and the goal', name: 'Robot (you)', box: [261, 120, 307, 162], at: [284, 147], crop: 'img/ui-robot.png',
+    job: 'Your eye finds it first.', more: 'Cream body, yellow face, purple arms, and ink eyes, the darkest colour on screen. It gets the same 1-pixel dark outline as the stones, so it stays readable on any ground.' },
+  { group: 'You and the goal', name: 'Crate (the goal)', box: [284, 96, 352, 169], at: [330, 145], crop: 'img/ui-crate.png',
+    job: 'The only thing you can break.', more: 'Orange is the strongest colour in the frame, so it pulls your eye. The stone sides were made plum so the orange stays easy to see next to warm stone.' },
+  { group: 'Ground: where to walk', name: 'Worn dirt path', box: [171, 163, 323, 241], at: [206, 231], crop: 'img/ui-dirt.png',
+    job: 'Quietly points the way.', more: 'Ground wears where people walk. The dirt runs along the old paving and through the gate gap under the crate, so breaking the crate reveals worn ground.' },
+  { group: 'Ground: where to walk', name: 'Paving slab', box: [251, 167, 295, 190], at: [266, 180], crop: 'img/ui-slab.png',
+    job: 'A real stone on the ground.', more: 'A thin pink side shows under each slab top, so slabs sit on the lawn instead of looking like stickers. You walk over them.' },
+  { group: 'Ground: where to walk', name: 'Light lawn patch', box: [443, 285, 491, 317], crop: 'img/ui-lawn-light.png',
+    job: 'Ground turned toward the sun.', more: 'A hidden tilt map makes some patches face the sun, like gentle slopes. There are no real hills, so walking is not affected.' },
+  { group: 'Ground: where to walk', name: 'Mid lawn', box: [411, 94, 459, 126], crop: 'img/ui-lawn-mid.png',
+    job: 'Flat ground, the base tone.', more: 'Mid green is the most common lawn tone, as in the reference. Light patches and shadows are drawn on top of it.' },
+  { group: 'Light: sun and sky', name: 'Shadow edge with grass teeth', box: [80, 275, 128, 303], crop: 'img/ui-shadow-teeth.png',
+    job: 'Says “grass” without noise.', more: 'Every tuft takes the light of the ground at its root, so tufts poke across a shadow edge and cut it into little blade teeth.' },
+  { group: 'Light: sun and sky', name: 'Tree shadow (one blob)', box: [456, 104, 545, 164], at: [488, 134], crop: 'img/ui-blob-shadow.png',
+    job: 'One calm shape per tree.', more: 'A hidden lumpy ball inside each crown casts the shadow, not the single leaves. So the shadow is one solid shape instead of lace.' },
+  { group: 'Light: sun and sky', name: 'Cloud shadow', box: [404, 305, 573, 360], at: [535, 336], crop: 'img/ui-cloud.png',
+    job: 'Big shapes and slow life.', more: 'Clouds drift at most about 9 pixels per second. They add big shadow shapes on open lawn where nothing stands.' },
+  { group: 'Light: sun and sky', name: 'Bush crown, lit like a ball', box: [120, 217, 201, 282], crop: 'img/ui-crown.png',
+    job: 'Dark blob, light on the sunny side.', more: 'Light leaves on the sunny side, dark underneath, mid between: the same order as a wood-shading tutorial (blob, shape, shade).' },
+  { group: 'Edges: what is in front', name: 'Dark outline', box: [200, 53, 232, 77], crop: 'img/ui-outline.png',
+    job: 'Shows what stands in front.', more: 'A 1-pixel line one tone darker where a stone stands in front of something farther away. Grass and trees get none, so they stay soft.' },
+  { group: 'Edges: what is in front', name: 'Light rim', box: [288, 191, 320, 213], crop: 'img/ui-rim.png',
+    job: 'The sunny top edge.', more: 'A 1-pixel lighter line on edges that bend outward, near-white on sunlit tops. Cream rims cover only 0.17% of this frame, so they are the brightest accent.' },
+  { group: 'Small life', name: 'Grass sprig', box: [346, 286, 362, 301], crop: 'img/ui-sprig.png',
+    job: 'A small mark one tone from its ground.', more: 'On light lawn a sprig is one tone darker, in shadow one tone lighter. Marks one step away from their ground stay quiet.' },
+  { group: 'Small life', name: 'Flowers', box: [384, 128, 434, 155], crop: 'img/ui-flowers.png',
+    job: 'Small colour accents.', more: 'Pink, cream and purple dots break up the green near the path.' },
+];
+const FRAME_W = 640, FRAME_H = 360;
+const BREAK_AT = [318, 128], BREAK_ZOOM = 3.2;
+const BREAK = [
+  { f: 0, src: 'img/break-f00.png', ms: '0 ms', text: 'Before E: crate whole, prompt above it.' },
+  { f: 2, src: 'img/break-f02.png', ms: '≈ 33 ms', text: 'Cream flash and squash (1.15 wide, 0.85 tall). Prompt gone, path already open.' },
+  { f: 4, src: 'img/break-f04.png', ms: '≈ 67 ms', text: 'Hit-stop: the game runs at 5% speed for 70 ms. You feel the hit.' },
+  { f: 6, src: 'img/break-f06.png', ms: '100 ms', text: 'Still frozen: only 11 pixels moved since frame 4.' },
+  { f: 8, src: 'img/break-f08.png', ms: '≈ 133 ms', text: 'Burst: crate gone, 7 planks and 24 splinters fly, dust starts, camera jolts 1 px.' },
+  { f: 12, src: 'img/break-f12.png', ms: '200 ms', text: 'Dust grows, the ground ring shows as cream dashes, shake still on.' },
+  { f: 16, src: 'img/break-f16.png', ms: '≈ 267 ms', text: 'Ring near its full 1.8 m, biggest dust cloud.' },
+  { f: 24, src: 'img/break-f24.png', ms: '400 ms', text: 'Ring gone, dust shrinking, planks falling.' },
+  { f: 30, src: 'img/break-f30.png', ms: '500 ms', text: 'Dust almost gone; planks fall back down.' },
+  { f: 45, src: 'img/break-f45.png', ms: '750 ms', text: 'The last planks drop to the ground as rubble. The way is open.' },
+];
+const JUMP_AT = [241, 165], JUMP_ZOOM = 5;
+const JUMP = [
+  { f: 0, src: 'img/jump-f00.png', ms: '0 ms', text: 'Before Space: standing on the dirt path at the start.' },
+  { f: 2, src: 'img/jump-f02.png', ms: '≈ 33 ms', text: 'Take-off: stretched tall and thin (0.85 wide, 1.2 tall).' },
+  { f: 6, src: 'img/jump-f06.png', ms: '100 ms', text: 'Two puffs of smoke blow out to each side of the feet.' },
+  { f: 10, src: 'img/jump-f10.png', ms: '≈ 167 ms', text: 'Rising. The puffs shrink to nothing instead of fading.' },
+  { f: 15, src: 'img/jump-f15.png', ms: '250 ms', text: 'Top of the hop: 0.25 m, about 9 screen pixels.' },
+  { f: 22, src: 'img/jump-f22.png', ms: '≈ 367 ms', text: 'Falling: gravity pulls 1.8 times harder than on the way up.' },
+  { f: 27, src: 'img/jump-f27.png', ms: '450 ms', text: 'Touch-down: squashed flat and wide (1.25 wide, 0.75 tall). A ring of dust starts.' },
+  { f: 30, src: 'img/jump-f30.png', ms: '500 ms', text: 'The dust ring spreads out from the feet.' },
+  { f: 34, src: 'img/jump-f34.png', ms: '≈ 567 ms', text: 'Back to normal size; the dust shrinks.' },
+  { f: 44, src: 'img/jump-f44.png', ms: '≈ 733 ms', text: 'Dust gone. Ready for the next hop.' },
+];
+const TIMELINE = {
+  span: 800,
+  ticks: [0, 115, 335, 495, 795],
+  rows: [
+    { name: 'Path opens', segs: [[0, 8, 'wood']] },
+    { name: 'Cream flash', segs: [[0, 45, 'cream']] },
+    { name: 'Squash', segs: [[0, 45, '']] },
+    { name: 'Hit-stop (5% speed)', segs: [[45, 115, 'slow']] },
+    { name: '7 planks fly', segs: [[115, 800, 'wood']] },
+    { name: '24 splinters', segs: [[115, 495, 'wood']] },
+    { name: '14 dust puffs', segs: [[115, 795, 'dust']] },
+    { name: 'Ground ring', segs: [[115, 335, 'ring']] },
+    { name: 'Camera shake 3 px', segs: [[115, 335, '']] },
+  ],
+};
+const FACTS = [
+  ['16 h', 'one session, evening to morning'],
+  ['13', 'steps in one long session'],
+  ['9', 'built overnight, unattended'],
+  ['42', 'agent runs: builders, checkers, researchers'],
+];
+
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') e.className = v; else if (k === 'html') e.innerHTML = v; else e.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+}
+
+function cmp(before, after, lb, la, alt) {
+  const f = el('figure', { class: 'cmp', 'data-cmp': '', style: '--p: 50%' });
+  f.append(
+    el('img', { class: 'after', src: after, alt: 'After: ' + alt, loading: 'lazy' }),
+    el('img', { class: 'before', src: before, alt: 'Before: ' + alt, loading: 'lazy' }),
+    el('span', { class: 'tag l' }, lb), el('span', { class: 'tag r' }, la),
+    el('div', { class: 'bar' }),
+    el('input', { type: 'range', min: '0', max: '100', value: '50', 'aria-label': 'Slide between before and after' })
+  );
+  return f;
+}
+
+function wireCmp(f) {
+  const input = f.querySelector('input');
+  const set = (p) => { p = Math.max(0, Math.min(100, p)); f.style.setProperty('--p', p + '%'); input.value = Math.round(p); };
+  let drag = false;
+  const at = (e) => { const r = f.getBoundingClientRect(); set((e.clientX - r.left) / r.width * 100); };
+  f.addEventListener('pointerdown', (e) => { drag = true; f.setPointerCapture(e.pointerId); at(e); input.focus({ preventScroll: true }); });
+  f.addEventListener('pointermove', (e) => { if (drag) at(e); });
+  f.addEventListener('pointerup', () => { drag = false; });
+  f.addEventListener('pointercancel', () => { drag = false; });
+  input.addEventListener('input', () => set(+input.value));
+  const ctl = el('div', { class: 'cmp-ctl' });
+  for (const [label, p] of [['Before', 100], ['Half', 50], ['After', 0]]) {
+    const b = el('button', { type: 'button' }, label);
+    b.addEventListener('click', () => set(p));
+    ctl.append(b);
+  }
+  f.after(ctl);
+}
+
+function frameStrip(list, at, zoom) {
+  const z = zoom * 100;
+  const ol = el('ol');
+  for (const b of list) {
+    const img = el('img', { src: b.src, alt: 'Frame ' + b.f, loading: 'lazy', style: `width:${z}%;left:${50 - at[0] / FRAME_W * z}%;top:${50 - at[1] / FRAME_H * z * 0.75}%` });
+    ol.append(el('li', {}, el('figure', {}, el('div', { class: 'crop' }, img), el('figcaption', {}, el('b', {}, 'frame ' + b.f + ' · ' + b.ms), ' ', b.text))));
+  }
+  return el('div', { class: 'frames' }, ol);
+}
+
+function render() {
+  const facts = document.getElementById('facts');
+  for (const [n, t] of FACTS) facts.append(el('div', { class: 'fact' }, el('b', {}, n), el('span', {}, t)));
+
+  const strip = document.getElementById('strip-list');
+  const steps = document.getElementById('steps');
+  STEPS.forEach((s, i) => {
+    strip.append(el('li', {}, el('a', { href: '#' + s.id },
+      el('img', { class: 'px', src: s.after, alt: '', loading: 'lazy' }),
+      el('span', { class: 'n' }, String(i + 1).padStart(2, '0') + ' · ' + s.tag),
+      el('span', { class: 't' }, s.name))));
+    if (s.era) steps.append(el('div', { class: 'era-break' }, el('b', {}, s.era.title), el('p', {}, s.era.text)));
+    const notes = el('div', { class: 'notes' },
+      el('div', { class: 'note' }, el('span', { class: 'k' }, 'What you see'), el('p', { html: s.see })),
+      el('div', { class: 'note' }, el('span', { class: 'k' }, 'Why it is there'), el('p', {}, s.why)),
+      el('div', { class: 'note' }, el('span', { class: 'k' }, 'Measured'), el('p', { class: 'num', html: s.num })));
+    const card = el('article', { class: 'step', id: s.id },
+      el('div', { class: 'step-head' }, el('span', { class: 'step-id' }, s.tag), el('h3', {}, s.name)),
+      el('div', { class: 'step-body' }, el('div', { style: 'min-width:0' }, s.strip ? frameStrip(JUMP, JUMP_AT, JUMP_ZOOM) : s.before ? cmp(s.before, s.after, (s.labels || [])[0] || 'Before', (s.labels || [])[1] || 'After', s.name) : el('img', { class: 'px', src: s.after, alt: s.name })), notes));
+    if (s.zooms && s.zooms.length) {
+      const d = el('details', { class: 'zoom' }, el('summary', {}, 'Zoom in (4×)'));
+      const z = el('div', { class: 'zimgs' });
+      for (const [src, cap] of s.zooms) z.append(el('figure', {}, el('a', { href: src, target: '_blank', rel: 'noopener' }, el('img', { class: 'px', src, alt: cap, loading: 'lazy' })), el('figcaption', {}, cap)));
+      d.append(z);
+      card.append(d);
+    }
+    steps.append(card);
+  });
+
+  const frame = document.getElementById('uiframe');
+  const legend = document.getElementById('legend');
+  const detail = document.getElementById('uidetail');
+  const hl = el('div', { class: 'hl', hidden: '' });
+  frame.append(hl);
+  let group = null;
+  const pins = [];
+  PINS.forEach((p, i) => {
+    const [x0, y0, x1, y1] = p.box;
+    const [px, py] = p.at || [(x0 + x1) / 2, (y0 + y1) / 2];
+    const pin = el('button', { class: 'pin', type: 'button', 'aria-pressed': 'false', 'aria-label': p.name, style: `left:${px / FRAME_W * 100}%;top:${py / FRAME_H * 100}%` }, String(i + 1));
+    frame.append(pin);
+    if (p.group !== group) { group = p.group; legend.append(el('li', { class: 'grp' }, group)); }
+    const lb = el('button', { type: 'button', 'aria-pressed': 'false' }, el('span', { class: 'dot' }, String(i + 1)), el('span', {}, el('b', {}, p.name), el('span', {}, p.job)));
+    legend.append(el('li', {}, lb));
+    const pick = () => {
+      pins.forEach(([a, b]) => { a.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-pressed', 'false'); });
+      pin.setAttribute('aria-pressed', 'true'); lb.setAttribute('aria-pressed', 'true');
+      Object.assign(hl.style, { left: x0 / FRAME_W * 100 + '%', top: y0 / FRAME_H * 100 + '%', width: (x1 - x0) / FRAME_W * 100 + '%', height: (y1 - y0) / FRAME_H * 100 + '%' });
+      hl.hidden = false;
+      detail.replaceChildren(el('img', { src: p.crop, alt: p.name + ', 4× close-up' }), el('div', {}, el('b', {}, (i + 1) + '. ' + p.name), el('p', {}, p.more)));
+      detail.hidden = false;
+    };
+    pin.addEventListener('click', pick); lb.addEventListener('click', pick);
+    pins.push([pin, lb, pick]);
+  });
+  if (pins[2]) pins[2][2]();
+
+  document.getElementById('frames').replaceWith(frameStrip(BREAK, BREAK_AT, BREAK_ZOOM));
+  const tl = document.getElementById('tl');
+  const span = TIMELINE.span;
+  for (const row of TIMELINE.rows) {
+    const track = el('div', { class: 'track' });
+    for (const [a, z, cls] of row.segs) track.append(el('div', { class: 'seg ' + (cls || ''), style: `left:${a / span * 100}%;width:${(z - a) / span * 100}%`, title: `${a}–${z} ms` }));
+    tl.append(el('span', { class: 'lab' }, row.name), track);
+  }
+  const axis = el('div', { class: 'tl-axis' });
+  for (const t of TIMELINE.ticks) axis.append(el('span', { style: `left:${t / span * 100}%` }, t + ' ms'));
+  tl.append(el('span', {}), axis);
+
+  document.querySelectorAll('[data-cmp]').forEach(wireCmp);
+}
+render();
+</script>
+</body>
+</html>
